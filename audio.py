@@ -154,7 +154,7 @@ def list_audio_files(path):
     # valid file extensions and returns a list of their paths.
     audio_files = []
     
-    for root, _, files in os.walk(filepath):
+    for root, _, files in os.walk(path):
         for file in files:
             audio_files.append(os.path.join(root, file))
 
