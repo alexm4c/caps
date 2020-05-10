@@ -12,6 +12,12 @@ it's relevent segments, and then optimize the audio for listening.
 	
 	usage
 
-## Requirements
+## Dependencies
 
-VLC is required
+VLC
+
+	sudo apt install vlc
+
+sox
+
+	sudo apt install sox libsox-fmt-mp3
