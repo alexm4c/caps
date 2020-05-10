@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 """
-audio.py
+metadata.py
 
-This module is a library of helper classes and functions for
-processing audio and collecting metadata. Specifically it contains
-functions that help with finding and opening audio files, reading
-and writing metadata to csv.
+This module is a library of classes and functions and collecting
+metadata. Specifically it contains functions that help with finding
+and opening audio files, reading and writing metadata to csv.
 
 #---------------------------------------------------------------------#
 
@@ -30,7 +29,6 @@ Classes and functions defined in this module include:
 """
 
 import csv
-import glob
 import os
 import re
 import subprocess
@@ -149,6 +147,29 @@ class MetadataList(list):
             )
 
 
+def timestamp_seconds(string):
+    # Convert and audio timestamp string in format mm:ss into
+    # it's seconds value
+    minutes, seconds = [ int(x) for x in string.split(':') ]
+    return seconds + (minutes * 60)
+
+
+def is_valid_segment(string):
+    # Validate and audio segment made up of a start timestamp and end
+    # timestamp delimited by '-' ([hh:]mm:ss-[hh:]mm:ss). Segments with 
+    # end cuts that procede start cuts are invalid. Returns True if 
+    # valid or False if invalid.
+    if not string:
+        # Defer None validation
+        return True
+
+    if not re.match(r'^(\d{2}:)?[0-5]\d:[0-5]\d-(\d{2}:)?[0-5]\d:[0-5]\d$', string):
+        return False
+
+    start, end = [ timestamp_seconds(x) for x in string.split('-') ]
+    return start < end
+
+
 def list_audio_files(path):
     # Search the given input directory for all audio that matches 
     # valid file extensions and returns a list of their paths.
@@ -164,29 +185,6 @@ def list_audio_files(path):
     )
 
     return list(audio_files)
-
-
-def timestamp_seconds(string):
-    # Convert and audio timestamp string in format mm:ss into
-    # it's seconds value
-    minutes, seconds = [ int(x) for x in string.split(':') ]
-    return seconds + (minutes * 60)
-
-
-def is_valid_segment(string):
-    # Validate and audio segment made up of a start timestamp and end
-    # timestamp delimited by '-' (mm:ss-mm:ss). Segments with end cuts
-    # that procede start cuts are invalid Returns True if valid or None
-    # and False if invalid.
-    if not string:
-        # Defer None validation
-        return True
-
-    if not re.match(r'^\d{2}:[0-5]\d-\d{2}:[0-5]\d$', string):
-        return False
-
-    start, end = [ timestamp_seconds(x) for x in string.split('-') ]
-    return start < end
 
 
 if __name__ == "__main__":
