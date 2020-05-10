@@ -33,7 +33,7 @@ import sys
 import getopt
 
 from ui import *
-from audio import *
+from metadata import *
 
 def collect_metadata(path, output_csv=None):
     """Collect raw audio metadata from terminal ui and write results to csv
