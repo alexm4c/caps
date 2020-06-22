@@ -61,13 +61,12 @@ def collect_metadata(path, output_csv=None):
     if os.path.isfile(output_csv):
         metadata_list.read_from_csv(output_csv)
 
-    # clear_and_title('Welcome to CAPS, a SALTY Conference Audio Processing System')
+    clear_and_title('Welcome to CAPS, a SALTY Conference Audio Processing System')
 
     try:
         # Wrap user input block in try-except to catch Ctrl-C and Ctrl+D
         # input so data can be saved before exiting cleanly
-        if not confirm('\nFound {} audio files. Continue?'.format(len(audio_files))):
-            sys.exit(0)
+        print_info('\nFound {} audio files'.format(len(audio_files)))
 
         event_name = prompt(
             input_prompt="Event",
@@ -77,49 +76,52 @@ def collect_metadata(path, output_csv=None):
             default=event_name,
         )
 
+        if not confirm('\nAre you ready to play audio? Raw audio could be very loud.', default='yes'):
+            sys.exit(0)
+
         for file in audio_files:
-            print_title('\nOpening ' + file)
+            clear_and_title('\nOpening ' + file)
 
             metadata = metadata_list.get_item('filepath', file)
 
             if metadata:
                 metadata.print_pretty()
 
-            # with VLCPlayer(file) as vlc:
-            if confirm('\nSkip this file?', default='no'):
-                continue
+            with VLCPlayer(file) as vlc:
+                if confirm('\nSkip this file?', default='yes'):
+                    continue
 
-            if not metadata:
-                metadata = metadata_list.add_item({
-                    'filepath': file,
-                    'event_name': event_name,
-                    'title': None,
-                    'speakers': None,
-                    'segments': None,
-                })
+                if not metadata:
+                    metadata = metadata_list.add_item({
+                        'filepath': file,
+                        'event_name': event_name,
+                        'title': None,
+                        'speakers': None,
+                        'segments': None,
+                    })
 
-            metadata['title'] = prompt(
-                input_prompt='Title',
-                message='\nEnter the title for this audio',
-                condition=lambda x: True if x else False,
-                error='You must enter a title',
-                default=metadata['title'],
-            )
+                metadata['title'] = prompt(
+                    input_prompt='Title',
+                    message='\nEnter the title for this audio',
+                    condition=lambda x: True if x else False,
+                    error='You must enter a title',
+                    default=metadata['title'],
+                )
 
-            metadata['speakers'] = multi_prompt(
-                input_prompt='Speaker',
-                message='\nInput each speakers name',
-                defaults=metadata['speakers'],
-            )
+                metadata['speakers'] = multi_prompt(
+                    input_prompt='Speaker',
+                    message='\nInput each speakers name',
+                    defaults=metadata['speakers'],
+                )
 
-            metadata['segments'] = multi_prompt(
-                input_prompt='Segment',
-                message='\nInput start and end cut of each audio segment (mm:ss-mm:ss)',
-                condition=is_valid_segment,
-                error='You must input the correct format (mm:ss-mm:ss)'
-                    ' and start cut must precede end cut',
-                defaults=metadata['segments'],
-            )
+                metadata['segments'] = multi_prompt(
+                    input_prompt='Segment',
+                    message='\nInput start and end cut of each audio segment (hh:mm:ss-hh:mm:ss)',
+                    condition=is_valid_segment,
+                    error='You must input the correct format (hh:mm:ss-hh:mm:ss)'
+                        ' and start cut must precede end cut',
+                    defaults=metadata['segments'],
+                )
 
     except (KeyboardInterrupt, EOFError):
         print_error('\nAborted')
@@ -133,6 +135,7 @@ def collect_metadata(path, output_csv=None):
 def _args():
     path = None
     output_csv = None
+
     try:
         opts, args = getopt.gnu_getopt(
             sys.argv[1:],
@@ -142,20 +145,28 @@ def _args():
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(1)
+
     for option, value in opts:
         if option in ('-h', '--help'):
             print(__doc__)
             sys.exit(0)
         elif option in ('-o', '--output-csv'):
             output_csv = value
+
     if output_csv and not os.path.isfile(output_csv):
         print_error('{} is not a valid output file'.format(output_csv))
         sys.exit(1)
-    if not args:
-        print_error('You must provide and input path')
-        sys.exit(1)
-    else:
+
+    if args:
         path = args[0]
+    else:
+        print_error('You must provide an input path')
+        sys.exit(1)
+
+    if not path or not os.path.isdir(path):
+        print_error('{} is not a valid input path'.format(path))
+        sys.exit(1)
+
     return (path, output_csv)
 
 

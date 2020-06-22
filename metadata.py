@@ -41,7 +41,7 @@ VALID_AUDIO = ('.mp3',)
 
 class VLCPlayer:
     # Provide a clean way to open an audio file with VLC, silence
-    # it's stdout messages, and then terminate the subproccess.
+    # it's stdout messages, and then terminate the subprocess.
     def __init__(self, path):
         self.path = path
 
@@ -93,13 +93,13 @@ class MetadataList(list):
                 rows.append(row)
 
         with open(output_csv, "w", newline='') as file:
-            dict_writer = csv.DictWriter(
+            writer = csv.DictWriter(
                 file,
                 self.KEYS,
                 quoting=csv.QUOTE_ALL,
             )
-            dict_writer.writeheader()
-            dict_writer.writerows(rows)
+            writer.writeheader()
+            writer.writerows(rows)
 
     def read_from_csv(self, input_csv):
         # Reads a csv file of audio metadata into a dictionary list
@@ -108,7 +108,6 @@ class MetadataList(list):
         with open(input_csv, "r") as file:
             reader = csv.DictReader(
                 file,
-                self.KEYS,
                 quoting=csv.QUOTE_ALL,
             )
             for row in reader:
@@ -117,6 +116,13 @@ class MetadataList(list):
                 self.add_item(row)
 
     class Metadata(dict):
+        def toId3(self):
+            id3 = {}
+            id3['title'] = self['title']
+            id3['artist'] = ', '.join(self['speakers'])
+            id3['album'] = self['event_name']
+            return id3
+
         def print_pretty(self):
             # Print in a human readable format
             print()
@@ -147,27 +153,62 @@ class MetadataList(list):
             )
 
 
-def timestamp_seconds(string):
-    # Convert and audio timestamp string in format mm:ss into
-    # it's seconds value
-    minutes, seconds = [ int(x) for x in string.split(':') ]
-    return seconds + (minutes * 60)
+def timestamp_seconds(seconds=None, minutes=None, hours=None):
+    # Convert and audio timestamp in hours, minutes, seconds
+    # into the total number of seconds. This function will generally
+    # be used with unknown user input, hence why we use heavy handed
+    # validation here.
+    hours = hours * 3600 if hours else 0
+    minutes = minutes * 60 if minutes else 0
+    seconds = seconds if seconds else 0
+    return hours + minutes + seconds
+
+def segment_seconds(string):
+    # Interpret audio segment made up of a start timestamp and end
+    # timestamp delimited by '-' ([hh:]mm:ss-[hh:]mm:ss). Segments with 
+    # end cuts that precede start cuts are invalid. Returns start time
+    # and end time as a tuple.
+    pattern = re.compile(
+        # Start timestamp
+        r'^(\d{2})?:?([0-5]\d):?([0-5]\d)'
+        # Separator
+        r'\s*[-|+;]\s*'
+        # End timestamp
+        r'(\d{2})?:?([0-5]\d):?([0-5]\d)$'
+    )
+    regex = re.search(pattern, string)
+
+    if not regex:
+        raise ValueError('Audio timestamp segment format is invalid: {}'.format(string))
+
+    groups = [ int(x) if x else 0 for x in regex.groups() ]
+
+    start_hr, start_min, start_sec, end_hr, end_min, end_sec = groups
+    
+    start = timestamp_seconds(start_sec, start_min, start_hr)
+    end = timestamp_seconds(end_sec, end_min, end_hr)
+
+    if end < start:
+        raise ValueError('Start timestamp must precede end timestamp')
+
+    return start, end
 
 
 def is_valid_segment(string):
-    # Validate and audio segment made up of a start timestamp and end
-    # timestamp delimited by '-' ([hh:]mm:ss-[hh:]mm:ss). Segments with 
-    # end cuts that procede start cuts are invalid. Returns True if 
-    # valid or False if invalid.
+    # Simple function for validating audio segments. A falsey 'string'
+    # value will return True because this function is intended to be
+    # used in conjunction with the multi_prompt() function in the ui
+    # package where an empty string is the signal to exit and continue.
+    # This is a little weird and may need revision.
     if not string:
         # Defer None validation
         return True
-
-    if not re.match(r'^(\d{2}:)?[0-5]\d:[0-5]\d-(\d{2}:)?[0-5]\d:[0-5]\d$', string):
+    try:
+        segment_seconds(string)
+    except (ValueError, TypeError):
         return False
-
-    start, end = [ timestamp_seconds(x) for x in string.split('-') ]
-    return start < end
+    else:
+        return True
 
 
 def list_audio_files(path):

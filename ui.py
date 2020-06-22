@@ -80,7 +80,7 @@ def prompt(
 ):
     # Prompt a terminal user for input. If the input passes the given
     # check, returns the users input. If the input fails the check,
-    # prints an error and reprompts the user until their input is valid.
+    # prints an error and will reprompt the user until their input is valid.
     if message:
         print('{0}:'.format(message))
 
@@ -140,7 +140,7 @@ def multi_prompt(
                 index = index + 1
                 responses.append(response)
             elif not responses:
-                # Error and reprompt if user reponses are empty
+                # Error and reprompt if user responses are empty
                 print_error('You must input at least one {}'.format(input_prompt))
             else:
                 break
