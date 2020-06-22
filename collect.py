@@ -35,6 +35,7 @@ import getopt
 from ui import *
 from metadata import *
 
+
 def collect_metadata(path, output_csv=None):
     """Collect raw audio metadata from terminal ui and write results to csv
 
@@ -61,7 +62,9 @@ def collect_metadata(path, output_csv=None):
     if os.path.isfile(output_csv):
         metadata_list.read_from_csv(output_csv)
 
-    clear_and_title('Welcome to CAPS, a SALTY Conference Audio Processing System')
+    clear_and_title(
+        'Welcome to CAPS, a SALTY Conference Audio Processing System'
+    )
 
     try:
         # Wrap user input block in try-except to catch Ctrl-C and Ctrl+D
@@ -119,7 +122,7 @@ def collect_metadata(path, output_csv=None):
                     message='\nInput start and end cut of each audio segment (hh:mm:ss-hh:mm:ss)',
                     condition=is_valid_segment,
                     error='You must input the correct format (hh:mm:ss-hh:mm:ss)'
-                        ' and start cut must precede end cut',
+                    ' and start cut must precede end cut',
                     defaults=metadata['segments'],
                 )
 

@@ -163,9 +163,10 @@ def timestamp_seconds(seconds=None, minutes=None, hours=None):
     seconds = seconds if seconds else 0
     return hours + minutes + seconds
 
+
 def segment_seconds(string):
     # Interpret audio segment made up of a start timestamp and end
-    # timestamp delimited by '-' ([hh:]mm:ss-[hh:]mm:ss). Segments with 
+    # timestamp delimited by '-' ([hh:]mm:ss-[hh:]mm:ss). Segments with
     # end cuts that precede start cuts are invalid. Returns start time
     # and end time as a tuple.
     pattern = re.compile(
@@ -179,12 +180,14 @@ def segment_seconds(string):
     regex = re.search(pattern, string)
 
     if not regex:
-        raise ValueError('Audio timestamp segment format is invalid: {}'.format(string))
+        raise ValueError(
+            'Audio timestamp segment format is invalid: {}'.format(string)
+        )
 
-    groups = [ int(x) if x else 0 for x in regex.groups() ]
+    groups = [int(x) if x else 0 for x in regex.groups()]
 
     start_hr, start_min, start_sec, end_hr, end_min, end_sec = groups
-    
+
     start = timestamp_seconds(start_sec, start_min, start_hr)
     end = timestamp_seconds(end_sec, end_min, end_hr)
 
@@ -212,10 +215,10 @@ def is_valid_segment(string):
 
 
 def list_audio_files(path):
-    # Search the given input directory for all audio that matches 
+    # Search the given input directory for all audio that matches
     # valid file extensions and returns a list of their paths.
     audio_files = []
-    
+
     for root, _, files in os.walk(path):
         for file in files:
             audio_files.append(os.path.join(root, file))

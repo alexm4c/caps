@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-
-
 # Arguments:
 #   Audio metadata (csv or object?)
 #   Path to audio
@@ -13,7 +11,7 @@
 #
 # 2. get audio file list
 #
-# 3. for each file in list 
+# 3. for each file in list
 #
 #   3a open file with pydub
 #
@@ -49,7 +47,7 @@ from mutagen import File
 def process_audio(metadata_list, output_dir=None):
     # Silence PySox warnings and info
     logging.getLogger('sox').setLevel(logging.ERROR)
-    
+
     output_dir = output_dir if output_dir else './processed'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
@@ -68,7 +66,7 @@ def process_audio(metadata_list, output_dir=None):
                 output_dir,
                 '{0}{1}'.format(title, '.mp3')
             )
-            
+
             progress_bar.set_description(title)
 
             cut(input_path, output_file, metadata)
@@ -83,7 +81,7 @@ def process_audio(metadata_list, output_dir=None):
 
 def cut(input_path, output_file, metadata):
     segments = metadata['segments']
-    segments = [ segment_seconds(segment) for segment in segments ]
+    segments = [segment_seconds(segment) for segment in segments]
 
     with TempFile('.mp3') as temp_file:
         # Open a new temporary file to store audio in between processes
@@ -91,7 +89,7 @@ def cut(input_path, output_file, metadata):
             # Cut audio into segments and create fade in/out
             # We need to use a new temporary file for each
             # audio segment
-            temp_segments = [ TempFile('.mp3') for segment in segments ]
+            temp_segments = [TempFile('.mp3') for segment in segments]
             try:
                 for index, segment in enumerate(segments):
                     sox = Transformer()
@@ -105,13 +103,15 @@ def cut(input_path, output_file, metadata):
                     # Concatenate all the audio segments back together
                     # and output to our main temporary file
                     Combiner().build(
-                        [ temp_segment.path for temp_segment in temp_segments ],
+                        [temp_segment.path for temp_segment in temp_segments],
                         temp_file.path,
                         'concatenate',
                     )
                 else:
                     # Only one segment so we don't need to combine anything
-                    subprocess.run(['cp', temp_segments[0].path, temp_file.path])
+                    subprocess.run(
+                        ['cp', temp_segments[0].path, temp_file.path]
+                    )
 
             except Exception as e:
                 raise(e)
@@ -127,12 +127,12 @@ def cut(input_path, output_file, metadata):
         sox.highpass(100)
         sox.lowpass(10000)
         sox.compand(0.005, 0.12, 6, [
-            (-90,-90),
-            (-70,-55),
-            (-50,-35),
-            (-32,-32),
-            (-24,-24),
-            (0,-8),
+            (-90, -90),
+            (-70, -55),
+            (-50, -35),
+            (-32, -32),
+            (-24, -24),
+            (0, -8),
         ])
         sox.equalizer(3000, 1000, 3)
         sox.equalizer(280, 120, 3)
@@ -167,6 +167,7 @@ class TempFile:
     def close(self):
         os.close(self.fd)
         os.remove(self.path)
+
 
 class SimpleTimer:
     def __init__(self, name):

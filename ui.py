@@ -125,7 +125,7 @@ def multi_prompt(
     while True:
         try:
             if defaults and index < len(defaults):
-                default = defaults[index] 
+                default = defaults[index]
             else:
                 default = None
 
@@ -141,7 +141,9 @@ def multi_prompt(
                 responses.append(response)
             elif not responses:
                 # Error and reprompt if user responses are empty
-                print_error('You must input at least one {}'.format(input_prompt))
+                print_error(
+                    'You must input at least one {}'.format(input_prompt)
+                )
             else:
                 break
 
