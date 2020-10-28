@@ -1,23 +1,47 @@
-# CAPS
+# PAPS - Python Audio Processing System
 
-A conference audio processing system
-
-These python scripts are designed to streamline the processing of raw audio files recorded at a conference or forum.
-It comprises of two main modules, collect.py and process.py. The primary function of collect.py is to prompt the user
-through a terminal ui to describe the audio metadata, such as title, speakers, and which audio segments to cut. 
-The second module, process.py, will then use the output of collect.py to write the metadata to the file, cut it into
-it's relevent segments, and then optimize the audio for listening.
-
-## Usage
-	
-	usage
+I've written these python scripts to help tag and optimise raw audio 
+recordings of lectures, etc.
 
 ## Dependencies
 
-VLC
+These scripts were written for python3
+
+Additionally, you will need vlc and sox installed on your machine.
+
+### VLC
+
+VLC is used to preview the raw audio so you can determine at which
+timestamps it should be cut.
 
 	sudo apt install vlc
 
-sox
+### sox
+
+Sox is the fastest audio processing software I could find. We intend to
+process many, potentially large audio files, so speed is critical.
 
 	sudo apt install sox libsox-fmt-mp3
+
+## Installation
+
+	pip install -r requirements.txt
+
+## Usage
+
+There are two main modules: `collect.py` and `process.py`
+
+### Collect
+
+	python collect.py path/to/audio/dir
+
+`collect.py` will prompt you to describe the audio metadata: title, 
+speakers, and audio segments to cut.
+
+### Process
+
+	python process.py collected_metadata.csv
+
+`process.py` will use the output from `collect.py` to cut each audio
+file into segments, roughly optimise for voice, converted to MP3 format,
+and then finally add metadata with ID3 tags.
